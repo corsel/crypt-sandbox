@@ -5,6 +5,23 @@
 #include <stdio.h>
 
 unsigned char keyHash[SHA256_DIGEST_LENGTH];
+unsigned char buffer[1024];
+
+void encryptAes(unsigned char *argData)
+{
+	AES_KEY aesKey;
+	AES_set_encrypt_key(keyHash, 256, &aesKey);
+	AES_encrypt(argData, buffer, &aesKey);
+	printf("debug - encrypted text: ");
+	int i = 0;
+	for (; i < 1024; i++)
+	{
+		if (keyHash[i] == '\0')
+			break;
+		printf("%02x", keyHash[i]);
+	};
+	printf("\n");
+}
 
 void generateHash(unsigned char *argPass)
 {
@@ -46,6 +63,7 @@ int main(int argc, char **argv)
 		printf("error - no arguments passed. terminating.\n");
 		return 1;
 	}
-	generateHash(argv[1]);	
+	generateHash(argv[1]);
+	encryptAes(argv[2]);
 	return 0;
 }
