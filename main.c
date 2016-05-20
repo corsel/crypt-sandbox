@@ -11,12 +11,17 @@ unsigned char *outBuffer;
 FILE *inFile, *outFile;
 long fileSize;
 
-int readFile(unsigned char *argFilename)
+void clearBuffers()
 {
 	free(inBuffer);
-	free(outBuffer);
 	inBuffer = 0;
+	free(outBuffer);
 	outBuffer = 0;
+}
+
+int readFile(unsigned char *argFilename)
+{
+	clearBuffers();
 	fileSize = -1;
 	
 	printf("debug - file name: %s\n", argFilename);
@@ -26,13 +31,19 @@ int readFile(unsigned char *argFilename)
 		printf("error - file not found: %s. skipping...\n", argFilename);
 		return 1;
 	}
-	
+
+	unsigned char outFilename[256];
+	strcpy(outFilename, argFilename);
+	strcat(outFilename, ".crp");
+	outFile = fopen(outFilename, "w+");
 	fseek(inFile, 0, SEEK_END);
 	fileSize = ftell(inFile);
 	printf("debug - readFile: file size is %li\n", fileSize);
 	rewind(inFile);
 	inBuffer = malloc(fileSize);
 	outBuffer = malloc(fileSize + 256 - (fileSize % 256));
+	
+	fgets(inBuffer, fileSize + 1, inFile);
 	
 	return 0;
 }
@@ -51,6 +62,8 @@ void encryptAes()
 			break;
 		printf("%02x ", outBuffer[i]);
 	};
+	fputs(outBuffer, outFile);
+	
 	printf("\n");
 }
 
@@ -97,9 +110,12 @@ int main(int argc, char **argv)
 	{
 		if (!readFile(argv[i]))
 		{
+			
 			encryptAes();
 			fclose(inFile);
+			fclose(outFile);
 		}
 	}
+	clearBuffers();
 	return 0;
 }

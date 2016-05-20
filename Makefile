@@ -6,3 +6,6 @@ build:
 
 debug: 
 	gcc -g ${INCLUDE} -o test-debug main.c ${LIBS}
+
+clean:
+	rm *.crp
