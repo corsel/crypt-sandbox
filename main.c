@@ -5,13 +5,20 @@
 #include <stdio.h>
 
 unsigned char keyHash[SHA256_DIGEST_LENGTH];
-unsigned char inBuffer[1024];
-unsigned char outBuffer[1024];
+unsigned char *inBuffer;
+unsigned char *outBuffer;
 
 FILE *inFile, *outFile;
+long fileSize;
 
 int readFile(unsigned char *argFilename)
 {
+	free(inBuffer);
+	free(outBuffer);
+	inBuffer = 0;
+	outBuffer = 0;
+	fileSize = -1;
+	
 	printf("debug - file name: %s\n", argFilename);
 	inFile = fopen(argFilename, "r");
 	if (!inFile)
@@ -19,6 +26,14 @@ int readFile(unsigned char *argFilename)
 		printf("error - file not found: %s. skipping...\n", argFilename);
 		return 1;
 	}
+	
+	fseek(inFile, 0, SEEK_END);
+	fileSize = ftell(inFile);
+	printf("debug - readFile: file size is %li\n", fileSize);
+	rewind(inFile);
+	inBuffer = malloc(fileSize);
+	outBuffer = malloc(fileSize + 256 - (fileSize % 256));
+	
 	return 0;
 }
 
@@ -26,6 +41,7 @@ void encryptAes()
 {
 	AES_KEY aesKey;
 	AES_set_encrypt_key(keyHash, 256, &aesKey);
+	
 	AES_encrypt(inBuffer, outBuffer, &aesKey);
 	printf("debug - encrypted text: ");
 	int i = 0;
